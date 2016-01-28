@@ -36,7 +36,10 @@ def main():
             print("Backing up {0}...".format(account['name']))
             auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':account['name']})
             url = "https://zimbra.xmission.com/home/{0}/?fmt={1}&auth=qp&zauthtoken={2}&meta=1".format(account['name'],args.format,auth.authToken)
-            rval = call(['wget', url, '-O', "{0}/{1}.{2}".format(args.backup_dir, account['name'], args.format)])
+            if args.wget:
+                rval = call(['wget', url, '-O', "{0}/{1}.{2}".format(args.backup_dir, account['name'], args.format)])
+            else:
+                rval = call(['curl', url, '-o', "{0}/{1}.{2}".format(args.backup_dir, account['name'], args.format)])
             if rval != 0:
                 print("Error backing up: {0}, aborting!".format(account['name']))
                 exit(1)
@@ -51,6 +54,7 @@ def parse():
     parser.add_argument('-u', '--user', help="Zimbra Admin Username")
     parser.add_argument('-p', '--password', help="Zimbra Admin Password")
     parser.add_argument('-b', '--backup_dir', help="Directory for backups")
+    parser.add_argument('-w', '--wget', help="Use wget instead of curl", action='store_true')
     parser.add_argument('-v', '--verbose', help="Verbose mode (SOAP Tracing)", action='store_true')
     return parser.parse_args()
 
