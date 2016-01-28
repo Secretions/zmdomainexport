@@ -35,7 +35,7 @@ def main():
         if account.get_name() == 'account':
             print("Backing up {0}...".format(account['name']))
             auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':account['name']})
-            url = "https://zimbra.xmission.com/home/{0}/?fmt={1}&auth=qp&zauthtoken={2}&meta=1".format(account['name'],args.format,auth.authToken)
+            url = "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&meta=1".format(args.server,account['name'],args.format,auth.authToken)
             if args.wget:
                 rval = call(['wget', url, '-O', "{0}/{1}.{2}".format(args.backup_dir, account['name'], args.format)])
             else:
