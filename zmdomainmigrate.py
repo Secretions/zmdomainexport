@@ -80,7 +80,7 @@ def main():
     print("Finished successfully!")
 
 def parse():
-    parser = argparse.ArgumentParser(description='Zimbra Domain Account Auto-Exporter')
+    parser = argparse.ArgumentParser(description='Zimbra Domain Account Migrator')
     parser.add_argument('-f', '--format', help='Format for export (tgz, tar, zip), default: tgz', default='tgz')
     parser.add_argument('-u', '--users', help="Users to migrate (optional, defaults to all)")
     parser.add_argument('-ss', '--source_server', help="Zimbra source server hostname, default: zimbra.xmission.com", default='zimbra.xmission.com')
