@@ -13,7 +13,7 @@ def main():
     if not args.domain:
         print("Missing domain name!")
         exit(1)
-    if not args.user:
+    if not args.admin_user:
         print("Missing admin user name!")
         exit(1)
     if not args.password:
@@ -26,7 +26,7 @@ def main():
     # Setup zimbra soap session
     print("Performing admin authentication...")
     zmsoap = zimbrasoap.admin(server = args.server, trace=args.verbose)
-    zmsoap.Auth(name = args.user, password = args.password)
+    zmsoap.Auth(name = args.admin_user, password = args.password)
 
     print("Getting all accounts...")
     accounts = zmsoap.GetAllAccounts(domain = {'by':'name', 'value':args.domain})
@@ -51,7 +51,7 @@ def parse():
     parser.add_argument('-d', '--domain', help='Domain to export')
     parser.add_argument('-f', '--format', help='Format for export (tgz, tar, zip), default: tgz', default='tgz')
     parser.add_argument('-s', '--server', help="Zimbra server hostname, default: zimbra.xmission.com", default='zimbra.xmission.com')
-    parser.add_argument('-u', '--user', help="Zimbra Admin Username")
+    parser.add_argument('-a', '--admin_user', help="Zimbra Admin Username")
     parser.add_argument('-p', '--password', help="Zimbra Admin Password")
     parser.add_argument('-b', '--backup_dir', help="Directory for backups")
     parser.add_argument('-w', '--wget', help="Use wget instead of curl", action='store_true')
