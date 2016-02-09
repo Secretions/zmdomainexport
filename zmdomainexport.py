@@ -28,26 +28,35 @@ def main():
     zmsoap = zimbrasoap.admin(server = args.server, trace=args.verbose)
     zmsoap.Auth(name = args.admin_user, password = args.password)
 
-    print("Getting all accounts...")
-    accounts = zmsoap.GetAllAccounts(domain = {'by':'name', 'value':args.domain})
+    accounts = []
 
-    for account in accounts.GetAllAccountsResponse.children():
-        if account.get_name() == 'account':
-            print("Exporting {0}...".format(account['name']))
-            auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':account['name']})
-            url = "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&meta=1".format(args.server,account['name'],args.format,auth.authToken)
-            if args.wget:
-                rval = call(['wget', url, '-O', "{0}/{1}.{2}".format(args.backup_dir, account['name'], args.format)])
-            else:
-                rval = call(['curl', url, '-o', "{0}/{1}.{2}".format(args.backup_dir, account['name'], args.format)])
-            if rval != 0:
-                print("Error backing up: {0}, aborting!".format(account['name']))
-                exit(1)
+    if not args.users:
+        print("Getting all accounts...")
+        source_accounts = zmsoap.GetAllAccounts(domain = {'by':'name', 'value':args.domain})
+
+        for account in source_accounts.GetAllAccountsResponse.children():
+            if account.get_name() == 'account':
+                accounts.append(account['name'])
+    else:
+        accounts = args.users.split(',')
+
+    for account in accounts:
+        print("Exporting {0}...".format(account))
+        auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':account})
+        url = "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&meta=1".format(args.server,account,args.format,auth.authToken)
+        if args.wget:
+            rval = call(['wget', url, '-O', "{0}/{1}.{2}".format(args.backup_dir, account, args.format)])
+        else:
+            rval = call(['curl', url, '-o', "{0}/{1}.{2}".format(args.backup_dir, account, args.format)])
+        if rval != 0:
+            print("Error backing up: {0}, aborting!".format(account))
+            exit(1)
 
     print("Finished successfully!")
 
 def parse():
     parser = argparse.ArgumentParser(description='Zimbra Domain Account Auto-Exporter')
+    parser.add_argument('-u', '--users', help="Users to migrate (optional, defaults to all)")
     parser.add_argument('-d', '--domain', help='Domain to export')
     parser.add_argument('-f', '--format', help='Format for export (tgz, tar, zip), default: tgz', default='tgz')
     parser.add_argument('-s', '--server', help="Zimbra server hostname, default: zimbra.xmission.com", default='zimbra.xmission.com')
