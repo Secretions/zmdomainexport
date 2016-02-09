@@ -28,7 +28,7 @@ def main():
     zmsoap = zimbrasoap.admin(server = args.server, trace=args.verbose)
     zmsoap.Auth(name = args.admin_user, password = args.password)
 
-    print("Backing up {0}...".format(args.user))
+    print("Importing {0}...".format(args.user))
     auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':args.user})
     rval = call(['curl', '-o', '/dev/null', '-F', 'file=@{0};filename={0}'.format(args.backup_file), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8".format(args.server,args.user,args.format,auth.authToken)])
     if rval != 0:

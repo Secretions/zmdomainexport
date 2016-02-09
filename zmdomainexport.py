@@ -33,7 +33,7 @@ def main():
 
     for account in accounts.GetAllAccountsResponse.children():
         if account.get_name() == 'account':
-            print("Backing up {0}...".format(account['name']))
+            print("Exporting {0}...".format(account['name']))
             auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':account['name']})
             url = "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&meta=1".format(args.server,account['name'],args.format,auth.authToken)
             if args.wget:
