@@ -2,6 +2,7 @@
 
 import argparse
 from subprocess import call
+import re
 import zimbrasoap;
 
 def main():
@@ -53,12 +54,14 @@ def main():
         accounts = args.users.split(',')
 
     for account in accounts:
-            print("Exporting {0}...".format(account))
-            auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':account})
-            url = "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&meta=1".format(args.source_server,account,args.format,auth.authToken)
-            rval = call(['curl', url, '-o', "{0}/{1}.{2}".format(args.backup_dir, account, args.format)])
+            local_part = re.match('(.*)@.*', account)
+            source_account = '{0}@{1}'.format(local_part.group(1),args.source_domain)
+            print("Exporting {0}...".format(source_account))
+            auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':source_account})
+            url = "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&meta=1".format(args.source_server,source_account,args.format,auth.authToken)
+            rval = call(['curl', url, '-o', "{0}/{1}.{2}".format(args.backup_dir, source_account, args.format)])
             if rval != 0:
-                print("Error backing up: {0}, aborting!".format(account))
+                print("Error backing up: {0}, aborting!".format(source_account))
                 exit(1)
 
     print("Finished backing up, restoring to dest server...");
@@ -67,9 +70,12 @@ def main():
     zmsoap.Auth(name = args.dest_admin_user, password = args.dest_password)
 
     for account in accounts:
-        print("Importing {0}...".format(account))
-        auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':account})
-        rval = call(['curl', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.backup_dir,account,args.format), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8".format(args.dest_server,account,args.format,auth.authToken)])
+        local_part = re.match('(.*)@.*', account)
+        source_account = '{0}@{1}'.format(local_part.group(1),args.source_domain)
+        dest_account = '{0}@{1}'.format(local_part.group(1),args.dest_domain)
+        print("Importing {0}...".format(dest_account))
+        auth = zmsoap.DelegateAuth(attributes = {'duration':'86400'}, account = {'by':'name', 'value':dest_account})
+        rval = call(['curl', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.backup_dir,source_account,args.format), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8&resolve=replace".format(args.dest_server,dest_account,args.format,auth.authToken)])
         if rval != 0:
             print("Error importing up: {0}, aborting!".format(account))
             exit(1)
